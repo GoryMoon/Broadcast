@@ -10,6 +10,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.apache.commons.validator.routines.InetAddressValidator;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -38,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final EditText mask = findViewById(R.id.ip);
+        final String ip = ((EditText)findViewById(R.id.ip)).getText().toString();
+        final String port = ((EditText)findViewById(R.id.port)).getText().toString();
         final EditText data = findViewById(R.id.data);
         List<InputFilter> list = new ArrayList<>();
         list.add(hexFilter);
@@ -50,6 +53,19 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!InetAddressValidator.getInstance().isValid(ip)) {
+                    Toast.makeText(MainActivity.this, "Invalid ip", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                int p;
+                try {
+                    p = Integer.parseInt(port);
+                } catch (NumberFormatException e) {
+                    Toast.makeText(MainActivity.this, "Invalid port value", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 try {
                     String s = data.getText().toString();
                     if (s.length() < 2 || s.length() > 2) {
@@ -63,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Invalid hex code", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    broadcast(ByteBuffer.allocate(4).putInt(hex).array(), InetAddress.getByName(mask.getText().toString()));
+                    broadcast(ByteBuffer.allocate(4).putInt(hex).array(), InetAddress.getByName(ip), p);
                     Toast.makeText(MainActivity.this, "Sent broadcast", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -72,14 +88,14 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public static void broadcast(final byte[] broadcastMessage, final InetAddress address) {
+    public static void broadcast(final byte[] broadcastMessage, final InetAddress address, final int port) {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
                 try {
                     DatagramSocket socket = new DatagramSocket();
                     socket.setBroadcast(true);
-                    socket.connect(address, 4446);
+                    socket.connect(address, port);
 
                     DatagramPacket packet = new DatagramPacket(broadcastMessage, broadcastMessage.length);
                     socket.send(packet);
