@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Broadcast</string>
+    <string name="port_default">4446</string>
+    <string name="data_default">FF</string>
+    <string name="hex_field">Hex Data</string>
+    <string name="ip_field">Ip</string>
+    <string name="port_field">Port</string>
+    <string name="default_ip">255.255.255.255</string>
+    <string name="send_broadcast">Send Broadcast</string>
+</resources>
